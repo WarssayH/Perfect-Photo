@@ -1,6 +1,6 @@
 # Import the required dependencies
 import cv2                                  # For video rendering
-from perfect_picture import PerfectPicture  # To analyze pictures for open eyes and a smile
+from perfect_photo import PerfectPhoto  # To analyze pictures for open eyes and a smile
 
 
 """
@@ -9,7 +9,7 @@ to stop execution.
 """
 def main():
     webcam = cv2.VideoCapture(0)
-    perf_pic = PerfectPicture(0.22, 0.45)
+    perf_pic = PerfectPhoto(0.22, 0.45)
     while True:
         _, frame = webcam.read()                # Grab latest frame from the webcam
 

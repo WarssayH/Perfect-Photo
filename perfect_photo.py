@@ -4,7 +4,7 @@ import dlib                                 # For face and landmark detection
 from scipy.spatial import distance as dist  # For calculating distances between facial landmarks
 from imutils import face_utils              # To get the landmark ids of the left and right eyes, mouth and jaw
 
-class PerfectPicture:
+class PerfectPhoto:
     def __init__(self, EYE_THRESH, SMILE_THRESH):
         # Thresholds
         self.EYE_THRESH = EYE_THRESH
