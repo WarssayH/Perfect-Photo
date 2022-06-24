@@ -5,10 +5,10 @@ from scipy.spatial import distance as dist  # For calculating distances between 
 from imutils import face_utils              # To get the landmark ids of the left and right eyes, mouth and jaw
 
 class PerfectPhoto:
-    def __init__(self, EYE_THRESH, SMILE_THRESH):
+    def __init__(self):
         # Thresholds
-        self.EYE_THRESH = EYE_THRESH
-        self.SMILE_THRESH = SMILE_THRESH
+        self.EYE_THRESH = 0.22
+        self.SMILE_THRESH = 0.45
 
         # Initializing the models for facial landmark detection
         self.detector = dlib.get_frontal_face_detector()
@@ -84,13 +84,6 @@ class PerfectPhoto:
 
     """Renders the EAR, MJWR, eye and mouth status onto the webcam viewport"""
     def render_analysis(self, frame, left_EAR, right_EAR, MJWR, eyes_open, smiling):
-        cv2.putText(frame, "LEye Aspect Ratio: " + str(round(left_EAR, 2)), (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                    (255, 0, 0), 2)
-        cv2.putText(frame, "REye Aspect Ratio: " + str(round(right_EAR, 2)), (30, 120), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                    (255, 0, 0), 2)
-        cv2.putText(frame, "Mouth to Jaw Width Ratio: " + str(round(MJWR, 2)), (30, 150), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                    (255, 0, 0), 2)
-
         if eyes_open:
             cv2.putText(frame, "Eyes open!", (10, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 0), 2)
         else:
@@ -100,9 +93,21 @@ class PerfectPhoto:
         else:
             cv2.putText(frame, "Not smiling", (10, 60), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
 
-    def analyze_img(self, frame):
+        cv2.putText(frame, "LEye Aspect Ratio: " + str(round(left_EAR, 2)), (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                    (255, 0, 0), 2)
+        cv2.putText(frame, "REye Aspect Ratio: " + str(round(right_EAR, 2)), (30, 120), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                    (255, 0, 0), 2)
+        cv2.putText(frame, "Mouth to Jaw Width Ratio: " + str(round(MJWR, 2)), (30, 150), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                    (255, 0, 0), 2)
+
+
+    """Analyses a given image for faces, whether or not they are smiling and have their eyes open"""
+    def analyze_img(self, frame, landmarks=False, analysis=False):
         img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # Convert frame to gray scale to pass to detector
         faces = self.detector(img_gray)                     # Detect all faces
+
+        features = []
+        expressions = []
         for face in faces:
             # Detect landmarks and convert the shape class directly to a list of (x,y) coordinates
             shape = self.landmark_predict(img_gray, face)
@@ -134,6 +139,14 @@ class PerfectPhoto:
                 smiling = True
 
             # Render landmarks, stats onto the face
-            self.render_landmarks(frame, left_eye, right_eye, mouth, jaw, eyes_open, smiling)
+            if landmarks is True:
+                self.render_landmarks(frame, left_eye, right_eye, mouth, jaw, eyes_open, smiling)
+
+            # Package face data for return
+            features.append({"left_eye": left_eye, "right_eye": right_eye, "mouth": mouth, "jaw": jaw})
+            expressions.append({"eyes_open": eyes_open, "smiling": smiling})
+
+        if len(faces) == 1 and analysis is True:
             self.render_analysis(frame, left_EAR, right_EAR, MJWR, eyes_open, smiling)
-        return frame
+
+        return frame, features, expressions
